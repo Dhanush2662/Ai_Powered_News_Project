@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced News Aggregator - India Priority Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn.india {
+            background: #ff9500;
+        }
+
+        .btn.india:hover {
+            background: #e6850e;
+        }
+
+        .btn.countries {
+            background: #28a745;
+        }
+
+        .btn.countries:hover {
+            background: #1e7e34;
+        }
+
+        .btn.rss {
+            background: #6f42c1;
+        }
+
+        .btn.rss:hover {
+            background: #5a32a3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #007bff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title.india {
+            border-bottom-color: #ff9500;
+        }
+
+        .section-title.other {
+            border-bottom-color: #28a745;
+        }
+
+        .article-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .article-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .article-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .article-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .article-title a:hover {
+            color: #007bff;
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .article-source {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .article-country {
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .article-country.india {
+            background: #ff9500;
+        }
+
+        .article-description {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .article-date {
+            font-size: 0.85em;
+            color: #6c757d;
+            text-align: right;
+        }
+
+        .stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .flag {
+            width: 20px;
+            height: 15px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .article-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇮🇳 Enhanced News Aggregator</h1>
+            <p>India-Prioritized News from Multiple Sources & Countries</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="loadPrioritizedFeed()">🎯 Prioritized Feed</button>
+            <button class="btn india" onclick="loadIndiaHeadlines()">🇮🇳 India Headlines</button>
+            <button class="btn countries" onclick="loadCountriesNews()">🌍 Other Countries</button>
+            <button class="btn rss" onclick="loadRSSFeeds()">📡 RSS Feeds</button>
+            <button class="btn" onclick="checkAPIStatus()">⚙️ API Status</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading news articles...</p>
+        </div>
+
+        <div id="content" class="content">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalArticles">0</div>
+                    <div class="stat-label">Total Articles</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="indiaArticles">0</div>
+                    <div class="stat-label">India Headlines</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="otherArticles">0</div>
+                    <div class="stat-label">Other Countries</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="apiSources">0</div>
+                    <div class="stat-label">API Sources</div>
+                </div>
+            </div>
+
+            <div id="articles"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/enhanced-news';
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('content').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('articles').innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+        }
+
+        function updateStats(total = 0, india = 0, other = 0, apis = 0) {
+            document.getElementById('totalArticles').textContent = total;
+            document.getElementById('indiaArticles').textContent = india;
+            document.getElementById('otherArticles').textContent = other;
+            document.getElementById('apiSources').textContent = apis;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Unknown date';
+            try {
+                return new Date(dateString).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch {
+                return 'Unknown date';
+            }
+        }
+
+        function getCountryFlag(countryCode) {
+            const flags = {
+                'in': '🇮🇳',
+                'us': '🇺🇸',
+                'ae': '🇦🇪',
+                'gb': '🇬🇧',
+                'ca': '🇨🇦',
+                'au': '🇦🇺',
+                'sg': '🇸🇬'
+            };
+            return flags[countryCode] || '🌍';
+        }
+
+        function renderArticles(articles, sections = null) {
+            const articlesContainer = document.getElementById('articles');
+            
+            if (!articles || articles.length === 0) {
+                articlesContainer.innerHTML = '<p>No articles found.</p>';
+                return;
+            }
+
+            let html = '';
+
+            if (sections) {
+                // Group articles by section
+                const indiaArticles = articles.filter(a => a.section === 'India Headlines');
+                const otherArticles = articles.filter(a => a.section === 'Other Countries with Indian Presence');
+
+                if (indiaArticles.length > 0) {
+                    html += `
+                        <div class="section">
+                            <h2 class="section-title india">🇮🇳 India Headlines (${indiaArticles.length})</h2>
+                            <div class="article-grid">
+                                ${indiaArticles.map(renderArticle).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (otherArticles.length > 0) {
+                    html += `
+                        <div class="section">
+                            <h2 class="section-title other">🌍 Other Countries with Indian Presence (${otherArticles.length})</h2>
+                            <div class="article-grid">
+                                ${otherArticles.map(renderArticle).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                html = `<div class="article-grid">${articles.map(renderArticle).join('')}</div>`;
+            }
+
+            articlesContainer.innerHTML = html;
+        }
+
+        function renderArticle(article) {
+            const countryFlag = getCountryFlag(article.country || 'in');
+            const countryName = article.country_name || 'India';
+            const isIndia = (article.country === 'in' || article.section === 'India Headlines');
+
+            return `
+                <div class="article-card">
+                    <div class="article-title">
+                        <a href="${article.url}" target="_blank">${article.title}</a>
+                    </div>
+                    <div class="article-meta">
+                        <span class="article-source">${article.source}</span>
+                        <span class="article-country ${isIndia ? 'india' : ''}">${countryFlag} ${countryName}</span>
+                    </div>
+                    <div class="article-description">${article.description || 'No description available.'}</div>
+                    <div class="article-date">${formatDate(article.published_at)}</div>
+                </div>
+            `;
+        }
+
+        async function loadPrioritizedFeed() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/prioritized-feed?limit=50&use_cache=false`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateStats(
+                        data.total_articles,
+                        data.sections.india_headlines,
+                        data.sections.other_countries,
+                        4 // Assuming 4 API sources
+                    );
+                    renderArticles(data.articles, data.sections);
+                } else {
+                    showError('Failed to load prioritized feed');
+                }
+            } catch (error) {
+                showError(`Network error: ${error.message}`);
+            }
+            hideLoading();
+        }
+
+        async function loadIndiaHeadlines() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/india-headlines?limit=30`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateStats(data.total_articles, data.total_articles, 0, 4);
+                    renderArticles(data.articles);
+                } else {
+                    showError('Failed to load India headlines');
+                }
+            } catch (error) {
+                showError(`Network error: ${error.message}`);
+            }
+            hideLoading();
+        }
+
+        async function loadCountriesNews() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/countries-with-indian-presence?limit_per_country=10`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateStats(data.total_articles, 0, data.total_articles, 4);
+                    renderArticles(data.articles);
+                } else {
+                    showError('Failed to load countries news');
+                }
+            } catch (error) {
+                showError(`Network error: ${error.message}`);
+            }
+            hideLoading();
+        }
+
+        async function loadRSSFeeds() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/rss-feeds/in`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateStats(data.total_articles, data.total_articles, 0, data.available_feeds.length);
+                    renderArticles(data.articles);
+                } else {
+                    showError('Failed to load RSS feeds');
+                }
+            } catch (error) {
+                showError(`Network error: ${error.message}`);
+            }
+            hideLoading();
+        }
+
+        async function checkAPIStatus() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/api-status`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const status = data.api_status;
+                    const html = `
+                        <div class="section">
+                            <h2 class="section-title">⚙️ API Configuration Status</h2>
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                                <p><strong>Configured APIs:</strong> ${data.total_configured_apis}/4</p>
+                                <p><strong>NewsAPI:</strong> ${status.newsapi ? '✅ Configured' : '❌ Not configured'}</p>
+                                <p><strong>GNews:</strong> ${status.gnews ? '✅ Configured' : '❌ Not configured'}</p>
+                                <p><strong>Mediastack:</strong> ${status.mediastack ? '✅ Configured' : '❌ Not configured'}</p>
+                                <p><strong>Currents API:</strong> ${status.currents ? '✅ Configured' : '❌ Not configured'}</p>
+                                <p><strong>Supported Countries:</strong> ${status.supported_countries.join(', ')}</p>
+                                <p><strong>RSS Countries:</strong> ${status.rss_countries.join(', ')}</p>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('articles').innerHTML = html;
+                    updateStats(0, 0, 0, data.total_configured_apis);
+                } else {
+                    showError('Failed to check API status');
+                }
+            } catch (error) {
+                showError(`Network error: ${error.message}`);
+            }
+            hideLoading();
+        }
+
+        // Load prioritized feed on page load
+        window.addEventListener('load', loadPrioritizedFeed);
+    </script>
+</body>
+</html>
