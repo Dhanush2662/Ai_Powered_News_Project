@@ -86,59 +86,66 @@ class EnhancedNewsAggregator:
             "sg": {"name": "Singapore", "priority": 7, "keywords": ["Singapore", "Singaporean", "Indian Singaporean"]}
         }
         
-        # Enhanced RSS feeds for India and UK
+        # Enhanced RSS feeds for India and International
         self.rss_feeds = {
             "in": [
-                # Existing feeds
+                # National feeds
                 {"name": "NDTV", "url": "https://feeds.feedburner.com/ndtvnews-top-stories", "source": "NDTV"},
-                {"name": "Times of India", "url": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms", "source": "Times of India"},
+                {"name": "Republic World", "url": "https://www.republicworld.com/rss/latest-news.xml", "source": "Republic World"},
+                {"name": "Times Now", "url": "https://www.timesnownews.com/rssfeeds/-2128936835.cms", "source": "Times Now"},
                 {"name": "The Hindu", "url": "https://www.thehindu.com/news/national/feeder/default.rss", "source": "The Hindu"},
-                {"name": "Indian Express", "url": "https://indianexpress.com/section/india/feed/", "source": "Indian Express"},
+                {"name": "Inshorts", "url": "https://inshorts.deta.dev/news", "source": "Inshorts"},
+                {"name": "News18", "url": "https://www.news18.com/rss/", "source": "News18"},
+                {"name": "Business Standard", "url": "https://www.business-standard.com/rss", "source": "Business Standard"},
+                {"name": "Firstpost", "url": "https://www.firstpost.com/rss/", "source": "Firstpost"},
+                {"name": "India Today", "url": "https://indiatoday.in/rss/1206578", "source": "India Today"},
+                {"name": "Indian Express", "url": "https://indianexpress.com/feed", "source": "Indian Express"},
                 {"name": "Economic Times", "url": "https://economictimes.indiatimes.com/rssfeedstopstories.cms", "source": "Economic Times"},
-                {"name": "Hindustan Times", "url": "https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml", "source": "Hindustan Times"},
+                {"name": "Live Mint", "url": "https://www.livemint.com/rss/news", "source": "Live Mint"},
+                {"name": "Zee News", "url": "http://zeenews.india.com/rss/india-national-news.xml", "source": "Zee News"},
+                {"name": "National Herald", "url": "https://www.nationalheraldindia.com/rss", "source": "National Herald"},
+                {"name": "Daily Excelsior", "url": "https://dailyexcelsior.com/feed", "source": "Daily Excelsior"},
+                {"name": "Telangana Today", "url": "https://telanganatoday.com/feed", "source": "Telangana Today"},
+                {"name": "Odisha Barta", "url": "https://odishabarta.com/feed", "source": "Odisha Barta"},
+                {"name": "Times of Bengal", "url": "https://thetimesofbengal.com/feed", "source": "Times of Bengal"},
+                {"name": "ABCR News", "url": "https://abcrnews.com/feed", "source": "ABCR News"},
+                {"name": "Headlines of Today", "url": "https://headlinesoftoday.com/feed", "source": "Headlines of Today"},
+                {"name": "CrowdWisdom360", "url": "https://crowdwisdom.live/feed", "source": "CrowdWisdom360"},
+                {"name": "News Today Net", "url": "https://newstodaynet.com/feed", "source": "News Today Net"},
                 
-                # NEW MAJOR NEWS OUTLETS
-                {"name": "India Today", "url": "https://www.indiatoday.in/rss/1206514", "source": "India Today"},
-                {"name": "Firstpost", "url": "https://www.firstpost.com/rss/india.xml", "source": "Firstpost"},
-                {"name": "Business Standard", "url": "https://www.business-standard.com/rss/home_page_top_stories.rss", "source": "Business Standard"},
-                {"name": "National Herald", "url": "https://www.nationalheraldindia.com/rss.xml", "source": "National Herald"},
-                {"name": "Zee Business", "url": "https://www.zeebiz.com/rss/india-news.xml", "source": "Zee Business"},
+                # Major additional national feeds
+                {"name": "Hindustan Times Top", "url": "https://www.hindustantimes.com/feeds/rss/top-news/rssfeed.xml", "source": "Hindustan Times"},
+                {"name": "Hindustan Times Latest", "url": "https://www.hindustantimes.com/feeds/rss/latest/rssfeed.xml", "source": "Hindustan Times"},
+                {"name": "Times of India", "url": "https://timesofindia.indiatimes.com/rss.cms", "source": "Times of India"},
                 
-                # SPECIALIZED NEWS PLATFORMS
-                {"name": "Scroll.in", "url": "https://scroll.in/feeds/all.rss", "source": "Scroll.in"},
-                {"name": "ThePrint", "url": "https://theprint.in/feed/", "source": "ThePrint"},
-                {"name": "The Quint", "url": "https://www.thequint.com/rss", "source": "The Quint"},
-                {"name": "Moneycontrol", "url": "https://www.moneycontrol.com/rss/latestnews.xml", "source": "Moneycontrol"},
-                {"name": "ETTelecom", "url": "https://telecom.economictimes.indiatimes.com/rss/topstories", "source": "ETTelecom"},
-                {"name": "Trak.in", "url": "https://trak.in/feed/", "source": "Trak.in"},
-                {"name": "TechCircle", "url": "https://www.techcircle.in/rss", "source": "TechCircle"},
-                {"name": "Inc42", "url": "https://inc42.com/feed/", "source": "Inc42"},
-                {"name": "YourStory", "url": "https://yourstory.com/feed", "source": "YourStory"},
-                
-                # GOVERNMENT SOURCES
-                {"name": "PIB India", "url": "https://pib.gov.in/rss/lreleng.xml", "source": "PIB India"},
-                {"name": "StartupIndia", "url": "https://www.startupindia.gov.in/rss.xml", "source": "StartupIndia"},
-                
-                # TECHNOLOGY
-                {"name": "Digital Inspiration", "url": "https://www.labnol.org/feed/", "source": "Digital Inspiration"},
-                {"name": "Gadgets 360", "url": "https://gadgets.ndtv.com/rss/news", "source": "Gadgets 360"},
-                {"name": "TechGYD", "url": "https://techgyd.com/feed/", "source": "TechGYD"},
-                
-                # FINANCIAL NEWS
-                {"name": "Mint", "url": "https://www.livemint.com/rss/news", "source": "Mint"},
-                {"name": "ET Now", "url": "https://www.etnow.in/rss", "source": "ET Now"},
-                {"name": "NSE", "url": "https://www.nseindia.com/rss/press_releases.xml", "source": "NSE"},
-                
-                # SPORTS
-                {"name": "NDTV Sports", "url": "https://sports.ndtv.com/rss/news", "source": "NDTV Sports"},
-                {"name": "TOI Sports", "url": "https://timesofindia.indiatimes.com/rss/sports/rssfeedstopstories.cms", "source": "TOI Sports"},
-                {"name": "Sportstar", "url": "https://sportstar.thehindu.com/rss/", "source": "Sportstar"},
-                {"name": "myKhel", "url": "https://www.mykhel.com/rss/cricket/feed.xml", "source": "myKhel"}
+                # Regional/city feeds
+                {"name": "Agra News", "url": "https://agranews.com/feed", "source": "Agra News"},
+                {"name": "North Lines", "url": "https://thenorthlines.com/feed", "source": "North Lines"},
+                {"name": "Chandigarh City News", "url": "https://feeds.feedburner.com/ChandigarhCityNews", "source": "Chandigarh City News"},
+                {"name": "Chandigarh Metro", "url": "https://chandigarhmetro.com/feed", "source": "Chandigarh Metro"},
+                {"name": "ABC Live", "url": "https://cms.abclive.in/home/rss/1/30", "source": "ABC Live"},
+                {"name": "QT Images", "url": "https://prod-qt-images.s3.amazonaws.com/feed.xml", "source": "QT Images"},
+                {"name": "India's News", "url": "https://feeds.indiasnews.net/rss/701", "source": "India's News"},
+                {"name": "Yo Vizag", "url": "https://yovizag.com/feed", "source": "Yo Vizag"},
+                {"name": "Kashmir News", "url": "https://kashmirnews.in/feed", "source": "Kashmir News"},
+                {"name": "Star of Mysore", "url": "https://starofmysore.com/feed", "source": "Star of Mysore"},
+                {"name": "Assam Tribune", "url": "https://assamtribune.com/feed", "source": "Assam Tribune"},
+                {"name": "Daily Times India", "url": "https://dailytimesindia.com/feed", "source": "Daily Times India"},
+                {"name": "Live Nagpur", "url": "https://thelivenagpur.com/feed", "source": "Live Nagpur"},
+                {"name": "Andhra Wishesh", "url": "https://andhrawishesh.com/feed", "source": "Andhra Wishesh"},
+                {"name": "Sangai Express", "url": "https://thesangaiexpress.com/feed", "source": "Sangai Express"}
             ],
-            "gb": [
-                {"name": "BBC News", "url": "http://feeds.bbci.co.uk/news/rss.xml", "source": "BBC News"},
-                {"name": "The Guardian", "url": "https://www.theguardian.com/uk/rss", "source": "The Guardian"},
-                {"name": "Reuters UK", "url": "https://feeds.reuters.com/reuters/UKdomesticNews", "source": "Reuters UK"}
+            "international": [
+                # International RSS Feeds
+                {"name": "BBC World News", "url": "https://feeds.bbci.co.uk/news/world/rss.xml", "source": "BBC"},
+                {"name": "CNN Top Stories", "url": "http://rss.cnn.com/rss/edition.rss", "source": "CNN"},
+                {"name": "Al Jazeera", "url": "https://www.aljazeera.com/xml/rss/all.xml", "source": "Al Jazeera"},
+                {"name": "Reuters", "url": "http://feeds.reuters.com/reuters/topNews", "source": "Reuters"},
+                {"name": "The Guardian World", "url": "https://www.theguardian.com/world/rss", "source": "The Guardian"},
+                {"name": "NASA Breaking News", "url": "https://www.nasa.gov/rss/dyn/breaking_news.rss", "source": "NASA"},
+                {"name": "New York Times", "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "source": "New York Times"},
+                {"name": "France24", "url": "https://www.france24.com/en/rss", "source": "France24"},
+                {"name": "Deutsche Welle", "url": "http://rss.dw.com/rdf/rss-en-al", "source": "Deutsche Welle"}
             ]
         }
         

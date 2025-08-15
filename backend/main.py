@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 from typing import Optional
 
-from routers import news, bias_analysis, fact_check, coverage_comparison, sentiment_analysis, fake_news, feedback, enhanced_news
+from routers import news, fact_check, enhanced_news_router
 from database.database import engine
 from database import models
 from utils.cache import clear_cache
@@ -18,8 +18,8 @@ load_dotenv()
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Bias News Checker API",
-    description="API for detecting news bias, generating neutral summaries, and fact-checking",
+    title="News Platform API",
+    description="API for news feed, fact-checking, consensus scoring, and translation",
     version="1.0.0"
 )
 
@@ -35,25 +35,14 @@ app.add_middleware(
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Include routers
+# Include only required routers
 app.include_router(news.router, prefix="/api/news", tags=["news"])
-app.include_router(enhanced_news.router, prefix="/api/enhanced-news", tags=["enhanced-news-aggregator"])
-app.include_router(bias_analysis.router, prefix="/api/bias", tags=["bias-analysis"])
 app.include_router(fact_check.router, prefix="/api/fact-check", tags=["fact-check"])
-app.include_router(coverage_comparison.router, prefix="/api/coverage", tags=["coverage"])
-app.include_router(sentiment_analysis.router, prefix="/api/sentiment", tags=["sentiment-analysis"])
-app.include_router(fake_news.router, prefix="/api/fake-news", tags=["fake-news-detection"])
-app.include_router(feedback.router, prefix="/api/feedback", tags=["user-feedback"])
+app.include_router(enhanced_news_router.router, tags=["enhanced-news"])
 
 @app.get("/")
 async def root():
-    return {"message": "Bias News Checker API", "version": "1.0.0", "demo": "Visit /demo for Enhanced News Aggregator demo"}
-
-@app.get("/demo")
-async def demo():
-    """Redirect to the enhanced news demo page"""
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/static/enhanced_news_demo.html")
+    return {"message": "News Platform API", "version": "1.0.0"}
 
 @app.get("/health")
 async def health_check():
@@ -61,9 +50,8 @@ async def health_check():
 
 @app.post("/api/cache/clear")
 async def clear_cache_endpoint(prefix: Optional[str] = Query(None, description="Cache prefix to clear. If not provided, all cache will be cleared.")):
-    """Clear cache with the given prefix or all cache if no prefix is provided"""
-    deleted = clear_cache(prefix)
-    return {"status": "success", "message": f"Cleared {deleted} cache entries", "prefix": prefix or "all"}
+    clear_cache(prefix)
+    return {"message": f"Cache cleared successfully{f' for prefix: {prefix}' if prefix else ''}"}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

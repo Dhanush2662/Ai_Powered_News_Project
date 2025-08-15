@@ -118,6 +118,8 @@ const Home: React.FC = () => {
       </section>
 
       {/* Country News Section */}
+      // Remove the entire "Country News Section" (lines ~117-180)
+      // Keep only the hero section and feature cards for the 4 allowed features
       <section className="bg-white rounded-2xl p-8 border border-gray-200">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">

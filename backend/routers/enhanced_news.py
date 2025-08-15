@@ -104,35 +104,28 @@ async def get_countries_with_indian_presence(
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to fetch news from countries: {str(e)}")
 
-@router.get("/country/{country_code}")
-async def get_country_news(
-    country_code: str,
-    limit: int = Query(50, description="Maximum number of articles to return")
-):
-    """
-    Get news for a specific country with enhanced validation
-    """
-    try:
-        # Use enhanced validation method
-        result = await news_aggregator.fetch_country_news_with_validation(country_code, limit)
-        
-        if not result["success"]:
-            raise HTTPException(status_code=400, detail=result["error"])
-        
-        return {
-            "status": "success",
-            "country_code": result["country_code"],
-            "country_name": result["country_name"],
-            "compatible_apis": result["compatible_apis"],
-            "total_articles": result["articles_count"],
-            "articles": result["articles"]
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"❌ Error fetching news for {country_code}: {e}")
-        print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Failed to fetch news for {country_code}: {str(e)}")
+# Remove this entire endpoint (lines 107-129):
+# @router.get("/country/{country_code}")
+# async def get_country_news(...):
+#     ...
+
+# Keep only these 5 core endpoints:
+# 1. /prioritized-feed (News Aggregation with Indian prioritization)
+# 2. /india-headlines (Basic news aggregation)
+# 3. /countries-with-indian-presence (Consensus Score - basic)
+# 4. /api-status (System status)
+# 5. /test-aggregation (Trending News)
+
+# Remove the /country/{country_code} endpoint completely
+# Remove the /rss-feeds/{country_code} endpoint
+# Remove the /debug/{country_code} endpoint
+
+# Keep only these core endpoints:
+# 1. /prioritized-feed (News Aggregation with Indian prioritization)
+# 2. /india-headlines (Basic news aggregation)
+# 3. /countries-with-indian-presence (Basic consensus via country coverage)
+# 4. /api-status (System status)
+# 5. /test-aggregation (Testing)
 
 @router.get("/rss-feeds/{country_code}")
 async def get_rss_feeds(

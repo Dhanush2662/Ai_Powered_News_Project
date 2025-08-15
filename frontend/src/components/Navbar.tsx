@@ -9,13 +9,10 @@ const Navbar: React.FC = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'News Feed', href: '/news' },
-    { name: 'Bias Analysis', href: '/bias-analysis' },
+    { name: 'News Feed', href: '/news-feed' },
     { name: 'Fact Check', href: '/fact-check' },
-    { name: 'Coverage Comparison', href: '/coverage-comparison' },
-    { name: 'Sentiment Analysis', href: '/sentiment-analysis' },
-    { name: 'Fake News Detection', href: '/fake-news-detection' },
-    { name: 'User Feedback', href: '/user-feedback' },
+    { name: 'Consensus Score', href: '/consensus-score' },
+    { name: 'Translator', href: '/translator' },
   ];
 
   const isActive = (path: string) => {
@@ -93,3 +90,10 @@ const Navbar: React.FC = () => {
 };
 
 export default Navbar;
+
+// Remove unwanted navigation items and keep only:
+// - Home
+// - News Feed  
+// - Fact Check
+// - Consensus Score
+// - Translator

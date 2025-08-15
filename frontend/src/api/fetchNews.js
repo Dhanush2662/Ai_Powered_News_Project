@@ -1,20 +1,12 @@
 import axios from 'axios';
 
-const API_KEY = '5eaaaccf09ae4096b235a28fd7ff5367';
-const BASE_URL = 'https://newsapi.org/v2/everything';
-const BACKEND_URL = 'http://localhost:8000'; // Our backend API
+const BACKEND_URL = 'http://localhost:8000';
 
+// Updated to use enhanced backend API with Indian news prioritization
 export const fetchNews = async (query = 'technology') => {
   try {
-    const response = await axios.get(BASE_URL, {
-      params: {
-        q: query,
-        sortBy: 'publishedAt',
-        language: 'en',
-        apiKey: API_KEY,
-      },
-    });
-    return response.data.articles;
+    const response = await fetchFromAPI(`/api/news/feed?topic=${encodeURIComponent(query)}&limit=50&focus_indian=true`);
+    return response.articles || [];
   } catch (error) {
     console.error('Error fetching news:', error);
     return [];
@@ -34,7 +26,7 @@ export const fetchFromAPI = async (endpoint, options = {}) => {
         'Content-Type': 'application/json',
         ...options.headers,
       },
-      timeout: 10000, // 10 second timeout
+      timeout: 15000, // 15 second timeout for aggregated news
     });
     
     console.log('API Response:', response.data);

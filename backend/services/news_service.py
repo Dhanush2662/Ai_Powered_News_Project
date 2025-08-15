@@ -268,6 +268,7 @@ class NewsService:
     @cache(prefix="currents_api")
     async def fetch_indian_news_from_currents(self) -> List[dict]:
         """Fetch Indian news from Currents API"""
+        articles = []  # Initialize articles outside try block
         try:
             async with httpx.AsyncClient() as client:
                 # Global news filtered for Indian content
@@ -280,7 +281,6 @@ class NewsService:
                 response.raise_for_status()
                 
                 data = response.json()
-                articles = []
                 for article in data.get('news', []):
                     # Check if it's Indian news
                     is_indian = (
@@ -300,13 +300,13 @@ class NewsService:
                             'is_indian': True,
                             'api_source': 'currents'
                         })
-                return articles
                 
         except Exception as e:
             print(f"Error fetching from Currents API: {str(e)}")
-            return []
+            traceback.print_exc()
+        
+        return articles
 
-    @cache(prefix="aggregated_news")
     async def get_enhanced_aggregated_news(
         self, 
         db: Session, 
@@ -316,61 +316,110 @@ class NewsService:
         offset: int = 0,
         focus_indian: bool = True
     ) -> List[dict]:
-        """Get enhanced aggregated news with focus on Indian news"""
+        """Get enhanced aggregated news with Indian news prioritized from multiple APIs and RSS feeds"""
         try:
             all_articles = []
             
-            # Fetch from all APIs
+            # Fetch Indian news from multiple APIs (prioritized)
             if focus_indian:
-                gnews_articles = await self.fetch_indian_news_from_gnews()
-                newsapi_articles = await self.fetch_indian_news_from_newsapi()
-                mediastack_articles = await self.fetch_indian_news_from_mediastack()
-                currents_articles = await self.fetch_indian_news_from_currents()
+                print("🇮🇳 Fetching Indian news from APIs...")
+                indian_articles = []
+                indian_articles.extend(await self.fetch_indian_news_from_gnews())
+                indian_articles.extend(await self.fetch_indian_news_from_newsapi())
+                indian_articles.extend(await self.fetch_indian_news_from_mediastack())
+                indian_articles.extend(await self.fetch_indian_news_from_currents())
                 
-                all_articles = gnews_articles + newsapi_articles + mediastack_articles + currents_articles
-            else:
-                # Get from database for non-Indian news
-                query = db.query(Article).join(NewsSource)
-                if topic:
-                    query = query.filter(Article.topic.ilike(f"%{topic}%"))
-                if source:
-                    query = query.filter(NewsSource.name.ilike(f"%{source}%"))
+                # Add RSS feeds for India
+                try:
+                    rss_articles = await self.fetch_india_rss_feeds()
+                    indian_articles.extend(rss_articles)
+                    print(f"✅ RSS Feeds: {len(rss_articles)} articles")
+                except Exception as e:
+                    print(f"❌ RSS failed: {e}")
                 
-                articles = query.order_by(Article.published_at.desc()).offset(offset).limit(limit).all()
-                
-                for article in articles:
-                    all_articles.append({
-                        "id": article.id,
-                        "title": article.title,
-                        "content": article.content,
-                        "url": article.url,
-                        "published_at": article.published_at,
-                        "topic": article.topic,
-                        "summary": article.summary,
-                        "source_name": article.source.name,
-                        "source_bias_score": article.source.bias_score,
-                        "is_indian": article.source.country == "in"
-                    })
+                all_articles.extend(indian_articles)
+                print(f"🇮🇳 Total Indian articles: {len(indian_articles)}")
             
-            # Remove duplicates based on title
-            seen_titles = set()
+            # Fetch international news
+            print("🌍 Fetching international news...")
+            international_articles = []
+            
+            # Get database articles
+            query = db.query(Article).join(NewsSource)
+            if topic:
+                query = query.filter(Article.topic.ilike(f"%{topic}%"))
+            if source:
+                query = query.filter(NewsSource.name.ilike(f"%{source}%"))
+            
+            db_articles = query.order_by(Article.published_at.desc()).limit(limit).all()
+            
+            # Convert database articles to dict format
+            for article in db_articles:
+                international_articles.append({
+                    "id": article.id,
+                    "title": article.title,
+                    "content": article.content,
+                    "url": article.url,
+                    "published_at": article.published_at,
+                    "topic": article.topic,
+                    "summary": article.summary,
+                    "source_name": article.source.name,
+                    "source_bias_score": article.source.bias_score,
+                    "is_indian": article.source.country == "in",
+                    "api_source": "database"
+                })
+            
+            all_articles.extend(international_articles)
+            print(f"🌍 Total international articles: {len(international_articles)}")
+            
+            # Remove duplicates based on title and URL
+            seen_identifiers = set()
             unique_articles = []
             for article in all_articles:
                 title = article.get('title', '').strip().lower()
-                if title and title not in seen_titles:
-                    seen_titles.add(title)
+                url = article.get('url', '').strip()
+                identifier = f"{title}_{url}"
+                
+                if identifier and identifier not in seen_identifiers:
+                    seen_identifiers.add(identifier)
                     unique_articles.append(article)
             
-            # Sort by date (newest first)
-            unique_articles.sort(key=lambda x: x.get('published_at', ''), reverse=True)
+            # Prioritize Indian news - sort by is_indian first, then by date
+            unique_articles.sort(key=lambda x: (
+                not x.get('is_indian', False),  # Indian articles first
+                -(int(datetime.fromisoformat(x.get('published_at', '2000-01-01').replace('Z', '+00:00')).timestamp()) if isinstance(x.get('published_at'), str) else int(x.get('published_at', datetime.now()).timestamp()))
+            ))
+            
+            print(f"📊 Final unique articles: {len(unique_articles)}")
             
             # Apply pagination
-            return unique_articles[offset:offset + limit]
+            paginated_articles = unique_articles[offset:offset + limit]
+            
+            # Ensure proper format for response
+            formatted_articles = []
+            for article in paginated_articles:
+                formatted_articles.append({
+                    "id": article.get('id'),
+                    "title": article.get('title', ''),
+                    "content": article.get('content', article.get('description', '')),
+                    "url": article.get('url', ''),
+                    "published_at": article.get('published_at'),
+                    "topic": article.get('topic', 'general'),
+                    "summary": article.get('summary', article.get('description', '')),
+                    "source_name": article.get('source_name', article.get('source', 'Unknown')),
+                    "source_bias_score": article.get('source_bias_score'),
+                    "is_indian": article.get('is_indian', False),
+                    "api_source": article.get('api_source', 'unknown')
+                })
+            
+            return formatted_articles
             
         except Exception as e:
-            print(f"Error getting enhanced aggregated news: {str(e)}")
+            print(f"❌ Error getting enhanced aggregated news: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return []
-    
+
     async def update_news_sources(self, db: Session):
         """Update news sources in database"""
         try:
@@ -723,7 +772,7 @@ class NewsService:
                     for article in data.get('news', []):
                         articles.append({
                             'title': article.get('title', ''),
-                            'description': article.get('description', ''),
+                            'content': article.get('description', ''),
                             'url': article.get('url', ''),
                             'published_at': article.get('published', ''),
                             'source': f"Currents - {article.get('domain', 'Unknown')}",
