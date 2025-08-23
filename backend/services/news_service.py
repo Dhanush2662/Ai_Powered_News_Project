@@ -344,6 +344,17 @@ class NewsService:
             print("🌍 Fetching international news...")
             international_articles = []
             
+            # If not focusing on Indian news, fetch international RSS feeds
+            if not focus_indian:
+                try:
+                    from services.enhanced_news_aggregator import EnhancedNewsAggregator
+                    aggregator = EnhancedNewsAggregator()
+                    intl_rss_articles = await aggregator.fetch_rss_feeds('international')
+                    international_articles.extend(intl_rss_articles)
+                    print(f"✅ International RSS Feeds: {len(intl_rss_articles)} articles")
+                except Exception as e:
+                    print(f"❌ International RSS failed: {e}")
+            
             # Get database articles
             query = db.query(Article).join(NewsSource)
             if topic:
