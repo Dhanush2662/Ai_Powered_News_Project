@@ -1,5 +1,7 @@
 {
-  "dependencies": {
-    "axios": "^1.11.0"
-  }
+  "fetchStatus": "success",
+  "currentPage": 1,
+  "totalPages": 5,
+  "totalArticles": 247,
+  "articles": [   ]
 }

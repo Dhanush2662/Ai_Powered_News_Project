@@ -4,7 +4,6 @@ from typing import List, Optional
 from database.database import get_db
 from database.models import Article, NewsSource
 from services.news_service import NewsService
-from services.enhanced_news_service import enhanced_news_service
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -78,16 +77,11 @@ async def get_enhanced_news_feed(
     focus_indian: bool = Query(True, description="Focus on Indian news"),
     db: Session = Depends(get_db)
 ):
-    """Get enhanced news feed with intelligent topic filtering and 30+ RSS feeds"""
+    """Get enhanced news feed with focus on Indian news from multiple APIs"""
     try:
-        # Use the new enhanced news service for better performance and accuracy
-        articles = await enhanced_news_service.get_enhanced_news_feed(
-            db=db,
-            topic=topic,
-            source=source,
-            limit=limit,
-            offset=offset,
-            focus_indian=focus_indian
+        news_service = NewsService()
+        articles = await news_service.get_enhanced_aggregated_news(
+            db, topic, source, limit, offset, focus_indian
         )
         
         # Calculate statistics

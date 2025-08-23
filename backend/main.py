@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 from typing import Optional
 
-from routers import news, fact_check, enhanced_news_router
+from routers import news, fact_check
 from database.database import engine
 from database import models
 from utils.cache import clear_cache
@@ -38,7 +38,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Include only required routers
 app.include_router(news.router, prefix="/api/news", tags=["news"])
 app.include_router(fact_check.router, prefix="/api/fact-check", tags=["fact-check"])
-app.include_router(enhanced_news_router.router, tags=["enhanced-news"])
 
 @app.get("/")
 async def root():

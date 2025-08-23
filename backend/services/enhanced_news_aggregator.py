@@ -138,12 +138,18 @@ class EnhancedNewsAggregator:
             "international": [
                 # International RSS Feeds
                 {"name": "BBC World News", "url": "https://feeds.bbci.co.uk/news/world/rss.xml", "source": "BBC"},
-                {"name": "CNN Top Stories", "url": "http://rss.cnn.com/rss/edition.rss", "source": "CNN"},
-                {"name": "Al Jazeera", "url": "https://www.aljazeera.com/xml/rss/all.xml", "source": "Al Jazeera"},
-                {"name": "Reuters", "url": "http://feeds.reuters.com/reuters/topNews", "source": "Reuters"},
-                {"name": "The Guardian World", "url": "https://www.theguardian.com/world/rss", "source": "The Guardian"},
+                {"name": "CNN World News", "url": "http://rss.cnn.com/rss/edition_world.rss", "source": "CNN"},
+                {"name": "Reuters World News", "url": "http://feeds.reuters.com/Reuters/worldNews", "source": "Reuters"},
+                {"name": "Al Jazeera English", "url": "https://www.aljazeera.com/xml/rss/all.xml", "source": "Al Jazeera"},
+                {"name": "Associated Press (AP)", "url": "https://apnews.com/apf-topnews?format=rss", "source": "Associated Press"},
+                {"name": "The Guardian World News", "url": "https://www.theguardian.com/world/rss", "source": "The Guardian"},
+                {"name": "NPR News", "url": "https://www.npr.org/rss/rss.php?id=1004", "source": "NPR"},
+                {"name": "FOX News World", "url": "https://feeds.foxnews.com/foxnews/world", "source": "FOX News"},
+                {"name": "New York Times World", "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "source": "New York Times"},
+                {"name": "Washington Post World News", "url": "http://feeds.washingtonpost.com/rss/world", "source": "Washington Post"},
+                
+                # Existing additional international feeds
                 {"name": "NASA Breaking News", "url": "https://www.nasa.gov/rss/dyn/breaking_news.rss", "source": "NASA"},
-                {"name": "New York Times", "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "source": "New York Times"},
                 {"name": "France24", "url": "https://www.france24.com/en/rss", "source": "France24"},
                 {"name": "Deutsche Welle", "url": "http://rss.dw.com/rdf/rss-en-al", "source": "Deutsche Welle"}
             ]
@@ -418,6 +424,7 @@ class EnhancedNewsAggregator:
                             'url': entry.link,
                             'published_at': published_at,
                             'source': f"RSS - {feed['source']}",
+                            'is_indian': country_code == 'in',
                             'api_source': 'rss',
                             'image_url': '',
                             'content': getattr(entry, 'summary', '')

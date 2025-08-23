@@ -398,12 +398,29 @@ class NewsService:
             # Ensure proper format for response
             formatted_articles = []
             for article in paginated_articles:
+                # Parse published_at to proper datetime format
+                published_at = article.get('published_at')
+                if isinstance(published_at, str):
+                    try:
+                        # Handle different datetime formats
+                        if '+0000' in published_at:
+                            published_at = published_at.replace(' +0000', '+00:00')
+                        elif 'Z' in published_at:
+                            published_at = published_at.replace('Z', '+00:00')
+                        # Parse to datetime object
+                        published_at = datetime.fromisoformat(published_at)
+                    except Exception as e:
+                        print(f"Warning: Could not parse date '{published_at}': {e}")
+                        published_at = datetime.now()
+                elif not isinstance(published_at, datetime):
+                    published_at = datetime.now()
+                
                 formatted_articles.append({
                     "id": article.get('id'),
                     "title": article.get('title', ''),
                     "content": article.get('content', article.get('description', '')),
                     "url": article.get('url', ''),
-                    "published_at": article.get('published_at'),
+                    "published_at": published_at,
                     "topic": article.get('topic', 'general'),
                     "summary": article.get('summary', article.get('description', '')),
                     "source_name": article.get('source_name', article.get('source', 'Unknown')),
@@ -814,6 +831,7 @@ class NewsService:
                             'url': entry.link,
                             'published_at': published_at,
                             'source': f"RSS - {feed['source']}",
+                            'is_indian': True,
                             'api_source': 'rss'
                         })
                         

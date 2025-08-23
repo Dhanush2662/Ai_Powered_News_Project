@@ -54,7 +54,7 @@ const NewsFeed: React.FC = () => {
         toast.error('No articles found for this topic');
       }
     } catch (error) {
-      toast.error('Error fetching news');
+      toast.error('Error fetching news'); // This is the error you're seeing
       console.error('Error:', error);
     } finally {
       setLoading(false);
