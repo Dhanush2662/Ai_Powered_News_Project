@@ -21,6 +21,15 @@ class NewsService:
         self.gnews_api_key = os.getenv("GNEWS_API_KEY")
         self.mediastack_key = os.getenv("MEDIASTACK_API_KEY")
         self.currents_api_key = os.getenv("CURRENTS_API_KEY")
+        
+        # Additional API Keys
+        self.newsdata_io_key = os.getenv("NEWSDATAIO_KEY")
+        self.worldnews_key = os.getenv("WORLDNEWS_KEY")
+        self.serpapi_key = os.getenv("SERPAPI_KEY")
+        self.guardian_api_key = os.getenv("GUARDIAN_API_KEY")
+        self.nytimes_api_key = os.getenv("NYTIMES_API_KEY")
+        self.nytimes_api_key_2 = os.getenv("NYTIMES_API_KEY_2")
+        
         self.base_url = "https://newsapi.org/v2"
         
         # Country code mapping for validation and normalization
@@ -173,7 +182,7 @@ class NewsService:
             async with httpx.AsyncClient() as client:
                 # Country-specific Indian news
                 params = {
-                    'token': self.gnews_api_key,
+                    'apikey': self.gnews_api_key,
                     'country': 'in',
                     'lang': 'en',
                     'max': 50
@@ -647,6 +656,51 @@ class NewsService:
                 except Exception as e:
                     logger.error(f"❌ Currents failed for {country_code}: {e}")
 
+            # GUARDIAN API
+            if self.guardian_api_key:
+                try:
+                    guardian_articles = await self.fetch_guardian_news(country_code)
+                    logger.info(f"✅ Guardian {country_code}: {len(guardian_articles)} articles")
+                    results.extend(guardian_articles)
+                except Exception as e:
+                    logger.error(f"❌ Guardian failed for {country_code}: {e}")
+
+            # NY TIMES API
+            if self.nytimes_api_key:
+                try:
+                    nytimes_articles = await self.fetch_nytimes_news(country_code)
+                    logger.info(f"✅ NY Times {country_code}: {len(nytimes_articles)} articles")
+                    results.extend(nytimes_articles)
+                except Exception as e:
+                    logger.error(f"❌ NY Times failed for {country_code}: {e}")
+
+            # SERPAPI (Google News)
+            if self.serpapi_key:
+                try:
+                    serpapi_articles = await self.fetch_serpapi_news(country_code)
+                    logger.info(f"✅ SerpAPI {country_code}: {len(serpapi_articles)} articles")
+                    results.extend(serpapi_articles)
+                except Exception as e:
+                    logger.error(f"❌ SerpAPI failed for {country_code}: {e}")
+
+            # NEWSDATA.IO API
+            if self.newsdata_io_key:
+                try:
+                    newsdata_articles = await self.fetch_newsdata_io_news(country_code)
+                    logger.info(f"✅ NewsData.io {country_code}: {len(newsdata_articles)} articles")
+                    results.extend(newsdata_articles)
+                except Exception as e:
+                    logger.error(f"❌ NewsData.io failed for {country_code}: {e}")
+
+            # WORLDNEWS API
+            if self.worldnews_key:
+                try:
+                    worldnews_articles = await self.fetch_worldnews_news(country_code)
+                    logger.info(f"✅ WorldNews {country_code}: {len(worldnews_articles)} articles")
+                    results.extend(worldnews_articles)
+                except Exception as e:
+                    logger.error(f"❌ WorldNews failed for {country_code}: {e}")
+
             # RSS feeds (only for India)
             if country_code.lower() == "in":
                 try:
@@ -684,7 +738,7 @@ class NewsService:
             async with httpx.AsyncClient() as client:
                 # Country-specific news
                 params = {
-                    'token': self.gnews_api_key,
+                    'apikey': self.gnews_api_key,
                     'country': country_code,
                     'lang': 'en',
                     'max': 50
@@ -852,6 +906,204 @@ class NewsService:
                     
         except Exception as e:
             print(f"❌ Error fetching RSS feeds: {str(e)}")
+        
+        return articles
+
+    @cache(prefix="guardian_api")
+    async def fetch_guardian_news(self, country_code: str = "us") -> List[dict]:
+        """Fetch news from Guardian API"""
+        articles = []
+        
+        try:
+            if not self.guardian_api_key:
+                return articles
+                
+            async with httpx.AsyncClient() as client:
+                # Guardian API uses sections and queries
+                sections = ['world', 'politics', 'business', 'technology']
+                
+                for section in sections:
+                    params = {
+                        'api-key': self.guardian_api_key,
+                        'section': section,
+                        'page-size': 10,
+                        'show-fields': 'headline,byline,thumbnail,short-url'
+                    }
+                    
+                    if country_code == 'in':
+                        params['q'] = 'India'
+                    
+                    response = await client.get('https://content.guardianapis.com/search', params=params)
+                    response.raise_for_status()
+                    
+                    data = response.json()
+                    for article in data.get('response', {}).get('results', []):
+                        articles.append({
+                            'title': article.get('webTitle', ''),
+                            'description': article.get('fields', {}).get('headline', ''),
+                            'url': article.get('webUrl', ''),
+                            'published_at': article.get('webPublicationDate', ''),
+                            'source': 'Guardian',
+                            'api_source': 'guardian'
+                        })
+                        
+        except Exception as e:
+            print(f"Error fetching from Guardian API: {str(e)}")
+        
+        return articles
+
+    @cache(prefix="nytimes_api")
+    async def fetch_nytimes_news(self, country_code: str = "us") -> List[dict]:
+        """Fetch news from NY Times API"""
+        articles = []
+        
+        try:
+            if not self.nytimes_api_key:
+                return articles
+                
+            async with httpx.AsyncClient() as client:
+                # Try multiple NY Times endpoints
+                endpoints = [
+                    'https://api.nytimes.com/svc/topstories/v2/world.json',
+                    'https://api.nytimes.com/svc/topstories/v2/politics.json',
+                    'https://api.nytimes.com/svc/topstories/v2/business.json'
+                ]
+                
+                for endpoint in endpoints:
+                    params = {'api-key': self.nytimes_api_key}
+                    
+                    response = await client.get(endpoint, params=params)
+                    if response.status_code == 429 and self.nytimes_api_key_2:
+                        # Try second key if rate limited
+                        params = {'api-key': self.nytimes_api_key_2}
+                        response = await client.get(endpoint, params=params)
+                    
+                    response.raise_for_status()
+                    
+                    data = response.json()
+                    for article in data.get('results', [])[:5]:  # Limit per endpoint
+                        articles.append({
+                            'title': article.get('title', ''),
+                            'description': article.get('abstract', ''),
+                            'url': article.get('url', ''),
+                            'published_at': article.get('published_date', ''),
+                            'source': 'New York Times',
+                            'api_source': 'nytimes'
+                        })
+                        
+        except Exception as e:
+            print(f"Error fetching from NY Times API: {str(e)}")
+        
+        return articles
+
+    @cache(prefix="serpapi_news")
+    async def fetch_serpapi_news(self, country_code: str = "us") -> List[dict]:
+        """Fetch Google News via SerpAPI"""
+        articles = []
+        
+        try:
+            if not self.serpapi_key:
+                return articles
+                
+            async with httpx.AsyncClient() as client:
+                query = "India news" if country_code == "in" else "latest news"
+                
+                params = {
+                    'engine': 'google_news',
+                    'q': query,
+                    'gl': country_code,
+                    'hl': 'en',
+                    'api_key': self.serpapi_key
+                }
+                
+                response = await client.get('https://serpapi.com/search', params=params)
+                response.raise_for_status()
+                
+                data = response.json()
+                for article in data.get('news_results', [])[:15]:
+                    articles.append({
+                        'title': article.get('title', ''),
+                        'description': article.get('snippet', ''),
+                        'url': article.get('link', ''),
+                        'published_at': article.get('date', ''),
+                        'source': f"Google News - {article.get('source', 'Unknown')}",
+                        'api_source': 'serpapi'
+                    })
+                    
+        except Exception as e:
+            print(f"Error fetching from SerpAPI: {str(e)}")
+        
+        return articles
+
+    @cache(prefix="newsdata_io")
+    async def fetch_newsdata_io_news(self, country_code: str = "us") -> List[dict]:
+        """Fetch news from NewsData.io API"""
+        articles = []
+        
+        try:
+            if not self.newsdata_io_key:
+                return articles
+                
+            async with httpx.AsyncClient() as client:
+                params = {
+                    'apikey': self.newsdata_io_key,
+                    'country': country_code,
+                    'language': 'en',
+                    'size': 10
+                }
+                
+                response = await client.get('https://newsdata.io/api/1/news', params=params)
+                response.raise_for_status()
+                
+                data = response.json()
+                for article in data.get('results', []):
+                    articles.append({
+                        'title': article.get('title', ''),
+                        'description': article.get('description', ''),
+                        'url': article.get('link', ''),
+                        'published_at': article.get('pubDate', ''),
+                        'source': f"NewsData.io - {article.get('source_id', 'Unknown')}",
+                        'api_source': 'newsdata_io'
+                    })
+                    
+        except Exception as e:
+            print(f"Error fetching from NewsData.io: {str(e)}")
+        
+        return articles
+
+    @cache(prefix="worldnews_api")
+    async def fetch_worldnews_api(self, country_code: str = "us") -> List[dict]:
+        """Fetch news from WorldNews API"""
+        articles = []
+        
+        try:
+            if not self.worldnews_key:
+                return articles
+                
+            async with httpx.AsyncClient() as client:
+                params = {
+                    'api-key': self.worldnews_key,
+                    'source-countries': country_code,
+                    'language': 'en',
+                    'number': 10
+                }
+                
+                response = await client.get('https://api.worldnewsapi.com/search-news', params=params)
+                response.raise_for_status()
+                
+                data = response.json()
+                for article in data.get('news', []):
+                    articles.append({
+                        'title': article.get('title', ''),
+                        'description': article.get('summary', ''),
+                        'url': article.get('url', ''),
+                        'published_at': article.get('publish_date', ''),
+                        'source': f"WorldNews - {article.get('source', 'Unknown')}",
+                        'api_source': 'worldnews'
+                    })
+                    
+        except Exception as e:
+            print(f"Error fetching from WorldNews API: {str(e)}")
         
         return articles
 

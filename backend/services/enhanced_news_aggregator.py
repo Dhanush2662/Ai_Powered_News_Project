@@ -300,7 +300,7 @@ class EnhancedNewsAggregator:
         articles = []
         
         try:
-            url = f"https://gnews.io/api/v4/top-headlines?country={country_code}&token={self.gnews_api_key}"
+            url = f"https://gnews.io/api/v4/top-headlines?country={country_code}&apikey={self.gnews_api_key}"
             
             async with httpx.AsyncClient() as client:
                 response = await client.get(url)

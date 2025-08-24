@@ -108,18 +108,49 @@ async def get_country_news(
     """Get news for specific country from all APIs and RSS feeds"""
     try:
         news_service = NewsService()
-        articles = await news_service.fetch_news_by_country(country_code)
+        raw_articles = await news_service.fetch_news_by_country(country_code)
         
-        # Limit articles
-        limited_articles = articles[:limit]
+        # Convert raw articles to ArticleResponse format
+        formatted_articles = []
+        for article in raw_articles[:limit]:
+            # Ensure all string fields have valid values
+            title = article.get('title', '') or 'No Title'
+            description = article.get('description', '') or ''
+            content = article.get('content', description) or description or 'No content available'
+            url = article.get('url', '') or ''
+            source = article.get('source', '') or 'Unknown Source'
+            
+            # Handle datetime parsing
+            published_at = article.get('published_at')
+            if published_at and isinstance(published_at, str):
+                # Remove timezone info if present to avoid parsing errors
+                if '+' in published_at:
+                    published_at = published_at.split('+')[0].strip()
+                elif 'Z' in published_at:
+                    published_at = published_at.replace('Z', '').strip()
+            
+            formatted_article = {
+                'id': None,  # API articles don't have database IDs
+                'title': title,
+                'content': content,
+                'url': url,
+                'published_at': published_at,
+                'topic': 'general',  # Default topic for API articles
+                'summary': description[:200] if description else 'No summary available',
+                'source_name': source,
+                'source_bias_score': 0.0,  # Default bias score
+                'is_indian': country_code.lower() == 'in',
+                'api_source': article.get('api_source', 'unknown')
+            }
+            formatted_articles.append(formatted_article)
         
         # Get unique API sources
-        api_sources = list(set(article.get('api_source', 'unknown') for article in limited_articles if article.get('api_source')))
+        api_sources = list(set(article.get('api_source', 'unknown') for article in raw_articles if article.get('api_source')))
         
         return CountryNewsResponse(
             country=country_code,
-            articles=limited_articles,
-            total_count=len(limited_articles),
+            articles=formatted_articles,
+            total_count=len(formatted_articles),
             api_sources=api_sources
         )
     except Exception as e:
@@ -153,6 +184,37 @@ async def get_indian_news(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching Indian news: {str(e)}")
+
+@router.get("/international", response_model=EnhancedNewsResponse)
+async def get_international_news(
+    limit: int = Query(50, description="Number of articles to return"),
+    offset: int = Query(0, description="Number of articles to skip"),
+    db: Session = Depends(get_db)
+):
+    """Get international news from multiple APIs"""
+    try:
+        news_service = NewsService()
+        
+        # Fetch international news (focus_indian=False)
+        international_articles = await news_service.get_enhanced_aggregated_news(
+            db, topic=None, source=None, limit=limit, offset=offset, focus_indian=False
+        )
+        
+        # Filter out Indian articles to ensure only international content
+        international_articles = [article for article in international_articles if not article.get('is_indian', False)]
+        
+        # Calculate statistics
+        api_sources = list(set(article.get('api_source', 'unknown') for article in international_articles if article.get('api_source')))
+        
+        return EnhancedNewsResponse(
+            articles=international_articles,
+            total_count=len(international_articles),
+            indian_count=0,
+            international_count=len(international_articles),
+            api_sources=api_sources
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching international news: {str(e)}")
 
 @router.get("/topics")
 async def get_topics(db: Session = Depends(get_db)):

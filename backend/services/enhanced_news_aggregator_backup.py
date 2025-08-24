@@ -296,7 +296,7 @@ class EnhancedNewsAggregator:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 params = {
-                    'token': self.gnews_api_key,
+                    'apikey': self.gnews_api_key,
                     'country': country_code,
                     'lang': 'en',
                     'max': 50

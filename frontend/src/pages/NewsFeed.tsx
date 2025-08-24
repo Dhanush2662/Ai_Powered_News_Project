@@ -31,6 +31,7 @@ const NewsFeed: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('technology');
   const [refreshing, setRefreshing] = useState(false);
+  const [focusIndian, setFocusIndian] = useState(true); // New state for toggle
 
   const topicsList = [
     'technology', 'politics', 'business', 'health', 'science', 
@@ -39,22 +40,23 @@ const NewsFeed: React.FC = () => {
 
   useEffect(() => {
     loadNews();
-  }, [selectedTopic]);
+  }, [selectedTopic, focusIndian]); // Added focusIndian to dependencies
 
   const loadNews = async () => {
     try {
       setLoading(true);
-      // Use enhanced news feed endpoint with Indian news prioritization
-      const response = await fetchFromAPI(`/api/news/feed?topic=${encodeURIComponent(selectedTopic)}&limit=50&focus_indian=true`);
+      // Use the focusIndian state to determine which news to fetch
+      const response = await fetchFromAPI(`/api/news/feed?topic=${encodeURIComponent(selectedTopic)}&limit=50&focus_indian=${focusIndian}`);
       
       if (response && response.articles) {
         setArticles(response.articles);
-        toast.success(`Loaded ${response.articles.length} articles about ${selectedTopic} (${response.indian_count} Indian, ${response.international_count} International)`);
+        const newsType = focusIndian ? 'Indian' : 'International';
+        toast.success(`Loaded ${response.articles.length} ${newsType.toLowerCase()} articles about ${selectedTopic} (${response.indian_count} Indian, ${response.international_count} International)`);
       } else {
         toast.error('No articles found for this topic');
       }
     } catch (error) {
-      toast.error('Error fetching news'); // This is the error you're seeing
+      toast.error('Error fetching news');
       console.error('Error:', error);
     } finally {
       setLoading(false);
@@ -65,6 +67,11 @@ const NewsFeed: React.FC = () => {
     setRefreshing(true);
     await loadNews();
     setRefreshing(false);
+  };
+
+  // New function to handle news type toggle
+  const handleNewsTypeToggle = (isIndian: boolean) => {
+    setFocusIndian(isIndian);
   };
 
   const filteredArticles = articles.filter(article => {
@@ -90,7 +97,7 @@ const NewsFeed: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">News Feed</h1>
-          <p className="text-gray-600">Stay informed with real-time news from multiple sources (Indian news prioritized)</p>
+          <p className="text-gray-600">Stay informed with real-time news from multiple sources</p>
         </div>
         <button
           onClick={handleRefresh}
@@ -100,6 +107,32 @@ const NewsFeed: React.FC = () => {
           <ArrowPathIcon className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           <span>{refreshing ? 'Refreshing...' : 'Refresh News'}</span>
         </button>
+      </div>
+
+      {/* News Type Toggle Buttons */}
+      <div className="flex justify-center">
+        <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+          <button
+            onClick={() => handleNewsTypeToggle(true)}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+              focusIndian
+                ? 'bg-orange-500 text-white shadow-sm'
+                : 'text-gray-700 hover:text-orange-600 hover:bg-orange-50'
+            }`}
+          >
+            🇮🇳 Indian News
+          </button>
+          <button
+            onClick={() => handleNewsTypeToggle(false)}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+              !focusIndian
+                ? 'bg-blue-500 text-white shadow-sm'
+                : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+            }`}
+          >
+            🌍 International News
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -139,7 +172,7 @@ const NewsFeed: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredArticles.map((article, index) => (
           <div key={index} className={`card hover:shadow-lg transition-all duration-200 ${
-            article.is_indian ? 'border-l-4 border-l-orange-500' : ''
+            article.is_indian ? 'border-l-4 border-l-orange-500' : 'border-l-4 border-l-blue-500'
           }`}>
             {article.urlToImage && (
               <img
@@ -153,9 +186,13 @@ const NewsFeed: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                   {article.title}
                 </h3>
-                {article.is_indian && (
+                {article.is_indian ? (
                   <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
                     🇮🇳 Indian
+                  </span>
+                ) : (
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                    🌍 International
                   </span>
                 )}
               </div>

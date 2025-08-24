@@ -23,9 +23,14 @@ class Config:
     
     # New News APIs (only adding missing ones)
     NEWSAPI_ADDITIONAL_KEY = os.getenv("NEWSAPI_ADDITIONAL_KEY", "")
-    NEWSDATA_IO_KEY = os.getenv("NEWSDATA_IO_KEY", "")
-    WORLDNEWS_API_KEY = os.getenv("WORLDNEWS_API_KEY", "")
+    NEWSDATA_IO_KEY = os.getenv("NEWSDATAIO_KEY", "")
+    WORLDNEWS_API_KEY = os.getenv("WORLDNEWS_KEY", "")
     SERPAPI_KEY = os.getenv("SERPAPI_KEY", "")
+    
+    # Additional Premium APIs
+    GUARDIAN_API_KEY = os.getenv("GUARDIAN_API_KEY", "")
+    NYTIMES_API_KEY = os.getenv("NYTIMES_API_KEY", "")
+    NYTIMES_API_KEY_2 = os.getenv("NYTIMES_API_KEY_2", "")
     
     # Cache
     CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", 600))
